@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Birthday Protocol // Petros</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Courier New', monospace; background: #0d1117; color: #58a6ff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; overflow: hidden; padding: 20px; }
+    .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 25px; width: 100%; max-width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    .view { display: none; }
+    .active { display: block; }
+    h2 { color: #3fb950; margin-top: 0; font-size: 20px; }
+    p { color: #c9d1d9; line-height: 1.5; font-size: 15px; }
+    .btn { background: #238636; color: #ffffff; border: 1px solid rgba(240,246,252,0.1); padding: 12px 20px; font-size: 16px; cursor: pointer; font-weight: bold; margin-top: 15px; border-radius: 6px; width: 100%; font-family: inherit; }
+    input { padding: 12px; font-size: 16px; width: 100%; text-align: center; border: 1px solid #30363d; background: #0d1117; color: #58a6ff; border-radius: 6px; margin-bottom: 10px; font-family: inherit; outline: none; }
+    input:focus { border-color: #58a6ff; }
+    #game-area { position: relative; width: 100%; height: 220px; background: #0d1117; border: 1px dashed #30363d; border-radius: 6px; margin-top: 15px; overflow: hidden; }
+    #target { font-size: 42px; position: absolute; cursor: pointer; user-select: none; transition: top 0.15s ease-out, left 0.15s ease-out; padding: 5px; }
+    .msg-box { background: #0d1117; padding: 15px; border-left: 3px solid #3fb950; color: #f0f6fc; font-size: 15px; margin-top: 20px; text-align: left; white-space: pre-wrap; }
+    .counter { font-size: 13px; color: #8b949e; margin-top: 8px; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <!-- 1. LOGIN -->
+  <div id="login-view" class="view active">
+    <h2>> SYSTEM_LOCKED</h2>
+    <p>Identity verification required for user <b>Petros</b>.</p>
+    <p style="font-size: 12px; color: #8b949e;">Hint: Check your physical birthday card.</p>
+    <input type="text" id="pwd-input" placeholder="Enter password...">
+    <button class="btn" onclick="unlock()">AUTHENTICATE</button>
+  </div>
+
+  <!-- 2. MINIGAME -->
+  <div id="game-view" class="view">
+    <h2>> BREWING_COFFEE...</h2>
+    <p>Tap the espresso shot 5 times to compile your birthday card.</p>
+    <div id="game-area">
+      <div id="target" onclick="catchItem()">☕</div>
+    </div>
+    <div class="counter">Extracted: <span id="score">0</span> / 5</div>
+  </div>
+
+  <!-- 3. BIRTHDAY CARD -->
+  <div id="win-view" class="view">
+    <h2>> BUILD_SUCCESSFUL 🎉</h2>
+    <h3 style="color: #f0f6fc; margin-bottom: 5px;">Happy Birthday, Petros!</h3>
+    <div class="msg-box" id="secret-msg"></div>
+  </div>
+</div>
+
+<script>
+  // Contraseña por defecto: "espresso"
+  // Mensaje cifrado por defecto: "May your code compile on the first try, your dough always rise, and your espresso shots pull with perfect crema.\n\nEnjoy the 500g of premium beans and have an awesome birthday night in Farringdon!"
+  
+  const ENCRYPTED_SECRET = "PAULO14RSx8cHhwFSw8cCx9fBxsZCx9fHB4ZFF8PGw8LH18cHAAZFF8PGw9fDRwbFAZfHAkPGw8LH18cHAAZFF8LHw8LGxQGH18ZHQhUUVRKGx9fHBsPH18VSBcPHF8FGx9fBxsZCx9fFQ8PGw8ZFF8cHBsPH18LHw8cH18LHwQPHB9fHBsZDw8cFQZfCxkcHVxR";
+
+  let hits = 0;
+  let finalMessage = "";
+
+  function xorCrypt(str, key) {
+    let out = '';
+    for (let i = 0; i < str.length; i++) {
+      out += String.fromCharCode(str.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+    }
+    return out;
+  }
+
+  function unlock() {
+    const pwd = document.getElementById('pwd-input').value.trim().toLowerCase();
+    try {
+      const decoded = xorCrypt(atob(ENCRYPTED_SECRET), pwd);
+      if (decoded.startsWith("OK:")) {
+        finalMessage = decoded.substring(3);
+        document.getElementById('login-view').classList.remove('active');
+        document.getElementById('game-view').classList.add('active');
+        moveCoffee();
+      } else {
+        alert("> ACCESS DENIED: Wrong password.");
+      }
+    } catch (e) {
+      alert("> ACCESS DENIED: Invalid key.");
+    }
+  }
+
+  function moveCoffee() {
+    const area = document.getElementById('game-area');
+    const target = document.getElementById('target');
+    const maxX = area.clientWidth - 60;
+    const maxY = area.clientHeight - 60;
+    target.style.left = Math.max(5, Math.floor(Math.random() * maxX)) + 'px';
+    target.style.top = Math.max(5, Math.floor(Math.random() * maxY)) + 'px';
+  }
+
+  function catchItem() {
+    hits++;
+    document.getElementById('score').innerText = hits;
+    if (hits >= 5) {
+      document.getElementById('game-view').classList.remove('active');
+      document.getElementById('win-view').classList.add('active');
+      document.getElementById('secret-msg').innerText = finalMessage;
+    } else {
+      moveCoffee();
+    }
+  }
+</script>
+</body>
+</html>
